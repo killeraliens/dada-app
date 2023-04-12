@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "binary"
 }
 
@@ -18,13 +18,13 @@ model Post {
   title     String
   content   String?
   published Boolean @default(false)
-  author    User? @relation(fields:[authorId], references:[id], onDelete: SetNull)
+  author    User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
   authorId  String?
 }
 
 model Account {
   id                 String  @id @default(cuid())
-  userId             String  @map("user_id")
+  userId             String
   type               String
   provider           String
   providerAccountId  String  @map("provider_account_id")
@@ -38,28 +38,30 @@ model Account {
   oauth_token_secret String?
   oauth_token        String?
 
-  user User @relation(fields:[userId], references:[id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
 model Session {
   id           String   @id @default(cuid())
-  sessionToken String   @unique@map("session_token")
+  sessionToken String   @unique @map("session_token")
   userId       String   @map("user_id")
   expires      DateTime
-  user         User     @relation(fields:[userId], references:[id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?@unique
-  emailVerified DateTime?
-  image         String?
-  posts         Post[]
-  accounts      Account[]
-  sessions      Session[]
+  id             String           @id @default(cuid())
+  name           String?
+  email          String?          @unique
+  emailVerified  DateTime?
+  image          String?
+  posts          Post[]
+  accounts       Account[]
+  sessions       Session[]
+  Authentication Authentication[]
+  Password       Password[]
 }
 
 model VerificationToken {
@@ -69,4 +71,24 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Authentication {
+  id                   String   @id @default(cuid())
+  userId               String   @map("user_id")
+  email                String   @unique
+  passwordHash         String
+  passwordResetToken   String   @unique
+  passwordResetExpires DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Password {
+  id                 String @id @default(cuid())
+  userId             String @map("user_id")
+  email              String @unique
+  encrypted_password String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
